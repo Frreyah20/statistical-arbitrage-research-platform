@@ -18,5 +18,33 @@ def train_model(dataset):
     print(importance_df)
     return model, score , importance_df
 
+def predict_pairs(model, features_df):
+
+    X = features_df[
+        [
+            "Correlation",
+            "Cointegration PValue",
+            "Beta",
+            "Half Life",
+            "Spread Mean",
+            "Spread Std",
+            "ZScore Volatility",
+            "Train Sharpe",
+            "Train Drawdown",
+            "Train Trades"
+        ]
+    ]
+
+    predictions = model.predict(X)
+
+    results = features_df.copy()
+
+    results["Predicted Sharpe"] = predictions
+
+    return results.sort_values(
+        "Predicted Sharpe",
+        ascending=False
+    )
+
 
     

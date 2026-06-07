@@ -1,15 +1,14 @@
-import pandas as pd
-
 from research_engine import backtest_pair
 from cointegration import calculate_hedge_ratio
 from cointegration import calculate_spread
 from signals import calculate_rolling_zscore
 from signal_generator import generate_positions
-from performance import (
-    calculate_daily_spread_returns,
-    calculate_strategy_returns
-)
+from performance import calculate_daily_spread_returns,calculate_strategy_returns
+import pandas as pd
+import numpy as np
 
+def calculate_pair_volatility(strategy_returns):
+    return strategy_returns.std()
 
 def get_pair_returns(stock1, stock2, prices):
     beta = calculate_hedge_ratio(
@@ -52,7 +51,8 @@ def build_portfolio_returns(
     prices,
     top_n=5
 ):
-    portfolio = pd.DataFrame()
+    all_returns = []
+    all_volatilities = []
 
     top_pairs = ranked_pairs.head(top_n)
 
@@ -60,18 +60,40 @@ def build_portfolio_returns(
 
         stock1, stock2 = pair.split("-")
 
-        returns = get_pair_returns(
+        strategy_returns = get_pair_returns(
             stock1,
             stock2,
             prices
         )
 
-        portfolio[pair] = returns
+        all_returns.append(strategy_returns)
 
-    portfolio = portfolio.fillna(0)
+        pair_volatility = calculate_pair_volatility(
+            strategy_returns
+        )
 
-    portfolio["Portfolio"] = (
-        portfolio.mean(axis=1)
+        all_volatilities.append(pair_volatility)
+
+    returns_df = pd.concat(
+        all_returns,
+        axis=1
     )
 
-    return portfolio["Portfolio"]
+    returns_df.columns = top_pairs["Pair"]
+
+    inverse_vol = 1 / np.array(all_volatilities)
+
+    weights = inverse_vol / inverse_vol.sum()
+
+    print("\nPortfolio Weights:")
+    for pair, weight in zip(
+        top_pairs["Pair"],
+        weights
+    ):
+        print(f"{pair}: {weight:.2%}")
+
+    portfolio_returns = (
+        returns_df * weights
+    ).sum(axis=1)
+
+    return portfolio_returns

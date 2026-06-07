@@ -13,12 +13,19 @@ def build_pair_features(stock1, stock2, train_prices):
     spread = calculate_spread(series1, series2, beta)
     half_life = calculate_half_life(spread)
     result = backtest_pair(stock1, stock2, train_prices)
+    spread_mean = spread.mean()
+    spread_std = spread.std()
+    zscore = (spread - spread_mean)/spread_std
+    zscore_volatility = zscore.std() 
     return {
         "Pair" : f"{stock1}-{stock2}",
         "Correlation": correlation,
-        "Cointegeration PValue": p_value,
+        "Cointegration PValue": p_value,
         "Beta": beta,
         "Half Life": half_life,
+        "Spread Mean": spread_mean,
+        "Spread Std": spread_std,
+        "ZScore Volatility": zscore_volatility,
         "Train Sharpe" : result["Sharpe"],
         "Train Drawdown" : result["Max Drawdown"],
         "Train Trades" : result["Trades"]

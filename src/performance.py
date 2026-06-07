@@ -12,12 +12,15 @@ def calculate_trade_spread(trades, spread):
         entry_spread = spread.loc[entry_date] #loc is used to select rows/columns by there labels
         exit_spread = spread.loc[exit_date]
 
-        pnl = position * (exit_spread - entry_spread)
+        transaction_cost = (abs(entry_spread) * 0.001 + abs(exit_spread)*0.001)
+        gross_pnl = (position * (exit_spread - entry_spread))
+        net_pnl = gross_pnl - transaction_cost
         
-        returns.append(pnl)
+        returns.append((net_pnl, transaction_cost))
 
 
-    trades["PnL"] = returns
+    trades["PnL"] = [x[0] for x in returns]
+    trades["Cost"] = [x[1] for x in returns]
     return trades 
 
 def calculate_performance_metrics(trades):
@@ -26,19 +29,23 @@ def calculate_performance_metrics(trades):
     winning_trades = (trades["PnL"] > 0).sum()
     win_rate = ((winning_trades/num_trades) * 100 if num_trades > 0 else 0)
     average_pnl = trades["PnL"].mean()
+    total_cost = trades["Cost"].sum()
     metrics = {"Total PnL" : total_pnl,
                 "Number of Trades" : num_trades,
                 "Win Rate" : win_rate,
-                "Average PnL" : average_pnl}
+                "Average PnL" : average_pnl,
+                "Total Cost": total_cost} 
     return metrics
 
 def calculate_daily_spread_returns(spread):
     spread_returns = spread.diff()
     return spread_returns
 
-def calculate_strategy_returns(spread_returns, positions):
+def calculate_strategy_returns(spread_returns, positions, transaction_cost = 0.001):
     positions = positions.shift(1) #to prevent signal lookahead bias
     strategy_returns = positions * spread_returns
+    trades = positions.diff().abs()
+    strategy_returns = (strategy_returns - trades*transaction_cost)
     return strategy_returns
 
 def build_equity_curve(strategy_returns, initial_capital = 100):
@@ -54,6 +61,8 @@ def calculate_drawdown(equity_curve):
 def calculate_sharpe_ratio(strategy_returns):
     mean_return = strategy_returns.mean()
     std_returns = strategy_returns.std()
+    if std_returns == 0 or np.isnan(std_returns):
+        return 0
     sharpe = (mean_return/std_returns) * np.sqrt(252)
     return sharpe
 

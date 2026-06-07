@@ -6,13 +6,13 @@ from signal_generator import generate_positions
 from trade_log import extract_trades
 from performance import calculate_daily_spread_returns, calculate_drawdown, calculate_half_life, calculate_performance_metrics, calculate_sharpe_ratio, calculate_strategy_returns, calculate_trade_spread, build_equity_curve
 
-def backtest_pair(stock1, stock2, prices):
+def backtest_pair(stock1, stock2, prices, entry_threshold=2.0, exit_threshold=0.5):
     beta = calculate_hedge_ratio(prices[stock1], prices[stock2])
     spread = calculate_spread(prices[stock1], prices[stock2], beta)
     half_life = calculate_half_life(spread)
     zscore = calculate_rolling_zscore(spread, window = 60)
     zscore = zscore.dropna()
-    positions = generate_positions(zscore)
+    positions = generate_positions(zscore, entry_threshold = entry_threshold, exit_threshold = exit_threshold)
     spread_returns = calculate_daily_spread_returns(spread)
     spread_returns = spread_returns.loc[positions.index] #aligning indices, because rolliing spread removed first 59 rows
     strategy_returns = calculate_strategy_returns(spread_returns, positions)

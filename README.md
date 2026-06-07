@@ -7,6 +7,15 @@ A quantitative research platform for discovering, ranking, backtesting, and eval
 The project identifies cointegrated stock pairs, constructs mean-reverting spreads, generates trading signals using z-score deviations, evaluates performance through backtesting, ranks candidate pairs using multiple quantitative metrics, and applies machine learning to investigate which pair characteristics are most predictive of future performance.
 
 ---
+## Sample Outputs
+
+| Equity Curve | Drawdown |
+|-------------|----------|
+| ![](results/plots/equity_curve.png) | ![](results/plots/drawdown.png) |
+
+| Spread | Feature Importance |
+|---------|-------------------|
+| ![](results/plots/spread.png) | ![](results/plots/feature_importance.png) |
 
 ## Features
 

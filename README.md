@@ -1,5 +1,31 @@
 # Statistical Arbitrage Research Platform
 
+## Architecture
+
+```text
+Market Data
+    │
+    ▼
+Cointegration Screening
+    │
+    ▼
+Pair Backtesting
+    │
+    ▼
+Research Ranking
+    │
+    ├── Portfolio Construction
+    │
+    ├── Walk-Forward Validation
+    │
+    ├── Parameter Optimization
+    │
+    └── Machine Learning Ranking
+    │
+    ▼
+Performance Analytics & Reporting
+```
+
 ## Overview
 
 A quantitative research platform for discovering, ranking, backtesting, and evaluating statistical arbitrage opportunities using pairs trading.
@@ -71,19 +97,38 @@ The strategy is evaluated using:
 
 to assess robustness and reduce overfitting risk.
 
+### Portfolio Construction
+
+- Multi-pair portfolio creation
+- Volatility-weighted allocation
+- Portfolio-level Sharpe ratio analysis
+- Portfolio-level drawdown analysis
+
+### Parameter Optimization
+
+Grid-search optimization of:
+
+- Entry Z-Score Thresholds
+- Exit Z-Score Thresholds
+
+to identify improved signal configurations.
+
 ### Machine Learning Analysis
 
 Feature engineering is performed on each pair:
 
 - Correlation
-- Cointegration p-value
+- Cointegration P-Value
 - Hedge Ratio
 - Half-Life
+- Spread Mean
+- Spread Standard Deviation
+- Z-Score Volatility
 - Training Sharpe Ratio
 - Training Drawdown
 - Number of Trades
 
-A Random Forest Regressor is then trained to predict out-of-sample Sharpe ratio and analyze feature importance.
+A Random Forest Regressor is trained to predict out-of-sample Sharpe ratios and analyze feature importance.
 
 ---
 
@@ -99,13 +144,23 @@ stat_arb_platform/
 │   ├── cointegrated_pairs.csv
 │   ├── ranked_pairs.csv
 │   ├── walkforward_results.csv
+│   ├── rolling_walkforward.csv
+│   ├── portfolio_returns.csv
+│   ├── portfolio_equity.csv
 │   ├── ml_dataset.csv
-│   └── feature_importance.csv
+│   ├── ml_ranked_pairs.csv
+│   ├── feature_importance.csv
+│   ├── parameter_optimization.csv
+│   └── project_summary.csv
 │
 ├── src/
 │   ├── data_loader.py
+│   ├── dashboard.py
 │   ├── correlation.py
 │   ├── cointegration.py
+│   ├── portfolio.py
+│   ├── walkforward.py
+│   ├── optimization.py
 │   ├── signals.py
 │   ├── signal_generator.py
 │   ├── trade_log.py
@@ -153,6 +208,31 @@ Machine Learning Analysis
 
 ---
 
+## Results
+
+### Portfolio Performance
+
+| Portfolio | Sharpe | Max Drawdown |
+|------------|---------|---------|
+| Research Portfolio | 2.73 | -6.44% |
+| ML Portfolio | -0.02 | -29.63% |
+
+### Walk-Forward Validation
+
+Average Test Sharpe: **2.76**
+
+Best Test Sharpe: **3.74**
+
+Worst Test Sharpe: **1.88**
+
+### Parameter Optimization
+
+Best parameter set discovered:
+
+| Entry Z-Score | Exit Z-Score | Sharpe |
+|---------------|--------------|---------|
+| 2.0 | 0.25 | 1.77 |
+
 ## Example Performance Metrics
 
 For each pair the platform computes:
@@ -176,16 +256,49 @@ Example output:
 
 ## Machine Learning Results
 
-A Random Forest model is trained using pair-level statistical features.
+A Random Forest Regressor was trained to predict future pair performance using statistical characteristics of each pair.
 
-Feature importance analysis suggests that:
+### Features Used
 
 - Correlation
-- Cointegration Strength
-- Drawdown Characteristics
+- Cointegration P-Value
 - Hedge Ratio
+- Half-Life
+- Spread Mean
+- Spread Standard Deviation
+- Z-Score Volatility
+- Training Sharpe Ratio
+- Training Drawdown
+- Number of Trades
 
-are among the strongest predictors of future out-of-sample performance within the tested universe.
+### Observation
+
+The ML-selected portfolio underperformed the research-ranked portfolio, indicating that simple statistical features alone were insufficient to reliably forecast future Sharpe ratios.
+
+This result highlights the importance of rigorous out-of-sample validation and reflects a realistic quantitative research workflow.
+
+---
+
+## Generated Outputs
+
+The platform automatically exports:
+
+- Cointegrated Pairs
+- Ranked Research Pairs
+- Walk-Forward Results
+- Rolling Walk-Forward Analysis
+- Portfolio Returns
+- Portfolio Equity Curves
+- Feature Importance Rankings
+- ML Predictions
+- Parameter Optimization Results
+- Experiment Summary Dashboard
+
+All outputs are stored inside:
+
+```text
+results/
+```
 
 ---
 
@@ -217,15 +330,16 @@ are among the strongest predictors of future out-of-sample performance within th
 
 ## Future Improvements
 
-- Dynamic hedge ratios using rolling regression
-- Kalman Filter spread estimation
-- Transaction cost modeling
-- Slippage simulation
-- Position sizing framework
-- Multi-pair portfolio construction
-- Hyperparameter optimization
-- XGBoost and LightGBM models
-- Live paper-trading integration
+- Dynamic Hedge Ratios using Rolling Regression
+- Kalman Filter Spread Estimation
+- Regime Detection Models
+- Enhanced Transaction Cost Modeling
+- Slippage Simulation
+- Multi-Factor Pair Selection
+- Bayesian Optimization
+- XGBoost and LightGBM Models
+- Live Paper Trading Deployment
+- Real-Time Signal Monitoring Dashboard
 
 ---
 

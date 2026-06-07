@@ -223,5 +223,5 @@ are among the strongest predictors of future out-of-sample performance within th
 ## Disclaimer
 
 This project is intended for research and educational purposes only and should not be considered financial advice.
-python src/main.py
+
 ```

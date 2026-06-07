@@ -15,7 +15,7 @@ The project identifies cointegrated stock pairs, constructs mean-reverting sprea
 
 | Spread | Feature Importance |
 |---------|-------------------|
-| ![](results/plots/spread.png) | ![](results/plots/feature_importance.png) |
+| ![](results/plots/spread_series.png) | ![](results/plots/feature_importance.png) |
 
 ## Features
 

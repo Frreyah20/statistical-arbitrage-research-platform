@@ -9,7 +9,7 @@ def test_cointegration(series1, series2):
 
     return p_value 
 
-def find_cointegerated_pairs(prices, significance = 0.05):
+def find_cointegrated_pairs(prices, significance = 0.05): 
     pairs = []
     for stock1, stock2 in combinations(prices.columns, 2):
         p_value  = test_cointegration(prices[stock1], prices[stock2])

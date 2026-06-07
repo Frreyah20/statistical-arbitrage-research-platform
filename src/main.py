@@ -1,5 +1,5 @@
 from data_loader import load_prices
-from cointegration import find_cointegerated_pairs
+from cointegration import find_cointegrated_pairs
 from research_engine import backtest_pair, backtest_all_pairs
 from ranking import rank_pairs
 import pandas as pd 
@@ -49,10 +49,10 @@ def main():
     #print(train_prices.shape)
     #print(test_prices.shape)
 
-    pairs = find_cointegerated_pairs(train_prices)
+    pairs = find_cointegrated_pairs(train_prices)
     print(f"Number of cointegrated pairs found: {len(pairs)}")
     pairs_df = pd.DataFrame(pairs, columns=["Stock1", "Stock2", "PValue"])
-    pairs_df.to_csv("results/cointegerated_pairs.csv", index = False)
+    pairs_df.to_csv("results/cointegrated_pairs.csv", index = False)
     
     results_train = backtest_all_pairs(pairs,train_prices)
     ranked_train = rank_pairs(results_train)

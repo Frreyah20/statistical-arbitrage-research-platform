@@ -1,26 +1,26 @@
 import matplotlib.pyplot as plt
 
-def plot_equity_curve(equity_curve):
+def plot_equity_curve(equity_curve, filename="equity_curve.png"):
     plt.figure(figsize = (12, 6))
     plt.plot(equity_curve)
     plt.title("StrategyEquity Curve")
     plt.xlabel("Date")
     plt.ylabel("Portfolio Value")
     plt.grid(True)
-    plt.savefig("results/plots/equity_curve.png")
+    plt.savefig(f"results/plots/{filename}")
     plt.close()
 
-def plot_drawdown(drawdown):
+def plot_drawdown(drawdown, filename="drawdown.png"):
     plt.figure(figsize = (12, 6))
     plt.plot(drawdown)
     plt.title("Strategy Drawdown")
     plt.xlabel("Date")
     plt.ylabel("Drawdown")
     plt.grid(True)
-    plt.savefig("results/plots/drawdown.png")
+    plt.savefig(f"results/plots/{filename}")
     plt.close()
     
-def plot_spread_series(spread):
+def plot_spread_series(spread, filename="spread_series.png"):
     plt.figure(figsize=(12,6))
     plt.plot(spread)
     plt.axhline(spread.mean(), linestyle = "--")
@@ -28,7 +28,7 @@ def plot_spread_series(spread):
     plt.xlabel("Date")
     plt.ylabel("Spread")
     plt.grid(True)
-    plt.savefig("results/plots/spread_series.png")
+    plt.savefig(f"results/plots/{filename}")
     plt.close()
 
 def plot_feature_importance(importance_df):

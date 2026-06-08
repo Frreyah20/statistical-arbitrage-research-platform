@@ -12,6 +12,7 @@ from performance import calculate_sharpe_ratio, calculate_drawdown
 from walkforward import rolling_walkforward
 from optimization import optimize_parameters
 from dashboard import create_experiment_summary
+from plots import plot_equity_curve, plot_drawdown
 
 TICKERS = [
     #technology
@@ -91,13 +92,18 @@ def main():
     #Research Porfolio
     portfolio_returns = build_portfolio_returns(ranked_train,train_prices,top_n=5)
     portfolio_equity = (100 + portfolio_returns.cumsum())
-    portfolio_sharpe = calculate_sharpe_ratio(portfolio_returns)
     portfolio_drawdown, portfolio_max_dd = (calculate_drawdown(portfolio_equity))
+    plot_equity_curve(portfolio_equity, "research_portfolio_equity.png")
+    plot_drawdown(portfolio_drawdown, "research_portfolio_drawdown.png")
+    portfolio_sharpe = calculate_sharpe_ratio(portfolio_returns)
     print("\nPortfolio Results")
     print(f"Portfolio Sharpe: {portfolio_sharpe:.4f}")
     print(f"Portfolio Max Drawdown: {portfolio_max_dd:.4f}")
     portfolio_returns.to_csv("results/portfolio_returns.csv")
     pd.DataFrame({"Portfolio Equity": portfolio_equity}).to_csv("results/portfolio_equity.csv")
+    print("Portfolio Peak:", portfolio_equity.max())
+    print("Portfolio Trough:", portfolio_equity.min())
+    print("Portfolio Max DD:", portfolio_max_dd)
  
 
     #ML Portfolio
@@ -145,6 +151,7 @@ def main():
         stock1, stock2 = pair.split("-")
         print(f"\n Generating Report for: {pair}")
         generate_pair_report(stock1, stock2, prices)
+        
         
     #Plots
     plot_feature_importance(importance_df)

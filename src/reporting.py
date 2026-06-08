@@ -55,6 +55,12 @@ def generate_pair_report(stock1, stock2, prices):
         equity_curve
     )
 
-    plot_spread_series(spread)
-    plot_equity_curve(equity_curve)
-    plot_drawdown(drawdown)
+    print("Pair Max DD:", drawdown.min())
+    print("Pair Equity Peak:", equity_curve.max())
+    print("Pair Equity Trough:", equity_curve.min())
+
+    pair_name = f"{stock1}_{stock2}"
+
+    plot_spread_series(spread, filename=f"spread_{pair_name}.png")
+    plot_equity_curve(equity_curve, filename=f"equity_{pair_name}.png")
+    plot_drawdown(drawdown, filename=f"drawdown_{pair_name}.png")

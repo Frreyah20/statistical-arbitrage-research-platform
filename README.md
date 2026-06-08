@@ -11,11 +11,11 @@ The project identifies cointegrated stock pairs, constructs mean-reverting sprea
 
 | Equity Curve | Drawdown |
 |-------------|----------|
-| ![](results/plots/equity_curve.png) | ![](results/plots/drawdown.png) |
+| ![](results/plots/research_portfolio_equity.png) | ![](results/plots/research_portfolio_drawdown.png) |
 
-| Spread | Feature Importance |
+| Feature Importance |
 |---------|-------------------|
-| ![](results/plots/spread_series.png) | ![](results/plots/feature_importance.png) |
+| ![](results/plots/feature_importance.png) |
 
 ## Features
 

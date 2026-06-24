@@ -4,7 +4,9 @@ from data_loader import load_prices
 from signals import calculate_rolling_zscore
 from signal_generator import generate_positions
 from trade_log import extract_trades
-from performance import calculate_daily_spread_returns, calculate_drawdown, calculate_half_life, calculate_performance_metrics, calculate_sharpe_ratio, calculate_strategy_returns, calculate_trade_spread, build_equity_curve
+from performance import calculate_daily_spread_returns, calculate_drawdown, calculate_half_life, calculate_performance_metrics, calculate_sharpe_ratio, calculate_strategy_returns, calculate_trade_spread, build_equity_curve, calculate_cagr
+import config
+from transaction_costs import TransactionCostModel
 
 def backtest_pair(stock1, stock2, prices, entry_threshold=2.0, exit_threshold=0.5):
     beta = calculate_hedge_ratio(prices[stock1], prices[stock2])
@@ -15,20 +17,53 @@ def backtest_pair(stock1, stock2, prices, entry_threshold=2.0, exit_threshold=0.
     positions = generate_positions(zscore, entry_threshold = entry_threshold, exit_threshold = exit_threshold)
     spread_returns = calculate_daily_spread_returns(spread)
     spread_returns = spread_returns.loc[positions.index] #aligning indices, because rolliing spread removed first 59 rows
-    strategy_returns = calculate_strategy_returns(spread_returns, positions)
-    equity_curve = build_equity_curve(strategy_returns)
-    sharpe = calculate_sharpe_ratio(strategy_returns)
-    _, max_drawdown = calculate_drawdown(equity_curve)
+    
+    # Initialize cost model
+    cost_model = TransactionCostModel(
+        commission_bps=config.COMMISSION_BPS,
+        spread_bps=config.SPREAD_BPS,
+        slippage_bps=config.SLIPPAGE_BPS
+    )
+    
+    gross_returns, net_returns, costs = calculate_strategy_returns(
+        spread_returns, positions, 
+        price1=prices[stock1].loc[positions.index], 
+        price2=prices[stock2].loc[positions.index], 
+        hedge_ratio=beta, 
+        cost_model=cost_model
+    )
+    
+    # Before costs
+    gross_equity = build_equity_curve(gross_returns)
+    gross_sharpe = calculate_sharpe_ratio(gross_returns)
+    _, gross_max_dd = calculate_drawdown(gross_equity)
+    gross_cagr = calculate_cagr(gross_equity)
+    
+    # After costs
+    net_equity = build_equity_curve(net_returns)
+    net_sharpe = calculate_sharpe_ratio(net_returns)
+    _, net_max_dd = calculate_drawdown(net_equity)
+    net_cagr = calculate_cagr(net_equity)
+    
     trades = extract_trades(positions)
-    trades = calculate_trade_spread(trades, spread)
+    # Using the true notional as required by the user
+    trades = calculate_trade_spread(trades, prices[stock1], prices[stock2], beta, cost_model)
     metrics = calculate_performance_metrics(trades)
+    
     return {
             "Pair" : f"{stock1}-{stock2}",
-            "Sharpe" : sharpe,
-            "Max Drawdown" : max_drawdown, 
+            "Sharpe (Before Costs)" : gross_sharpe,
+            "Sharpe (After Costs)" : net_sharpe,
+            "CAGR (Before Costs)" : gross_cagr,
+            "CAGR (After Costs)" : net_cagr,
+            "Max Drawdown (Before Costs)" : gross_max_dd,
+            "Max Drawdown (After Costs)" : net_max_dd, 
             "Trades" : metrics["Number of Trades"],
             "Win Rate" : metrics["Win Rate"],
-            "Total PnL" : metrics["Total PnL"],
+            "Total Gross PnL" : metrics["Total Gross PnL"],
+            "Total Net PnL" : metrics["Total Net PnL"],
+            "Total Cost": metrics["Total Cost"],
+            "Cost vs Gross Profit %": metrics["Cost vs Gross Profit %"],
             "Half Life" : half_life
     }
 

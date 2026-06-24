@@ -1,11 +1,31 @@
 Feature,Importance
-Correlation,0.21248976846693982
-Cointegration PValue,0.1167952693067023
-Half Life,0.11609263076142394
-Beta,0.10669212654091939
-Spread Mean,0.10296377320732447
-Spread Std,0.10250158581796087
-Train Drawdown,0.10222796466357759
-Train Sharpe,0.08019390504444952
-Train Trades,0.06004297619070216
-ZScore Volatility,0.0
+spread,0.1342667
+vol_regime_medium,0.0491209
+vol_regime_high,0.04548053
+distance_from_mean_60,0.043593675
+trend_bullish,0.043477017
+rolling_mean_reversion_speed,0.042251855
+spread_volatility_20,0.04164873
+rolling_beta,0.040074192
+rolling_correlation_20,0.03971865
+hedge_ratio,0.039675787
+spread_percentile_120,0.038660627
+distance_from_mean_20,0.038242467
+rolling_skew,0.03810101
+spread_zscore_60,0.03773651
+spread_volatility_60,0.037699252
+rolling_half_life,0.03765485
+rolling_correlation_60,0.03430263
+rolling_adf_statistic,0.032074727
+rolling_kurtosis,0.029419249
+spread_momentum_5,0.028053697
+spread_momentum_20,0.027900256
+spread_percentile_60,0.022855662
+zscore_change,0.021099057
+vol_regime_low,0.020126501
+spread_zscore_20,0.019636907
+spread_return,0.017128656
+trend_bearish,0.0
+realized_volatility,0.0
+distance_from_equilibrium,0.0
+rolling_adf_pvalue,0.0

@@ -3,7 +3,7 @@ from cointegration import find_cointegrated_pairs
 from research_engine import backtest_pair, backtest_all_pairs
 from ranking import rank_pairs
 import pandas as pd 
-from feature_engineering import build_feature_dataset, add_test_target
+from feature_engineering import build_complete_feature_dataset
 from ml_model import train_model , predict_pairs
 from plots import plot_feature_importance
 from reporting import generate_pair_report
@@ -70,23 +70,84 @@ def main():
     print(ranked_train.head(10))
     ranked_train.to_csv("results/ranked_pairs.csv", index=False)
 
-    #ML Dataset
-    features_df = build_feature_dataset(pairs, train_prices)
-    print(features_df.head())
-    ml_dataset = add_test_target(features_df, test_prices)
-    print(ml_dataset.head())
-    ml_dataset.to_csv("results/ml_dataset.csv", index=False)
+    # ML Dataset
+    features_df = build_complete_feature_dataset(pairs, prices)
+    features_df.to_csv("results/features.csv", index=False)
+    
+    train_data = features_df[features_df["date"] <= "2023-12-31"]
+    test_data = features_df[features_df["date"] >= "2024-01-01"]
+    
+    train_data.to_csv("results/ml_train_dataset.csv", index=False)
+    test_data.to_csv("results/ml_test_dataset.csv", index=False)
 
-    #ML Model
-    model, score, importance_df = train_model(ml_dataset)
-    print("\nModel R2:")
+    # ML Model
+    model, score, importance_df = train_model(train_data, test_data)
+    print("\nModel ROC-AUC / Accuracy:")
     print(score)
     importance_df.to_csv("results/feature_importance.csv", index=False)
 
-    #ML Ranking
-    predicted_pairs = predict_pairs(model, features_df)
+    # ML Ranking
+    predictions_df = predict_pairs(model, test_data)
+    # Aggregate predictions to get a single score per pair
+    pair_scores = predictions_df.groupby("pair")["Predicted_Probability"].mean().reset_index()
+    pair_scores.rename(columns={"pair": "Pair"}, inplace=True)
+    predicted_pairs = pair_scores.sort_values("Predicted_Probability", ascending=False)
+    
     print("\nTop ML Prediction Pairs: ")
-    print(predicted_pairs[["Pair", "Predicted Sharpe"]].head(10))
+    print(predicted_pairs.head(10))
+    
+    # --- Advanced ML Evaluation & Reporting (Non-Intrusive) ---
+    import os
+    if os.path.exists("results/test_probabilities.csv"):
+        from plots import plot_roc_curves, plot_probability_distributions, plot_calibration_curves
+        from reporting import generate_research_report
+        
+        test_probs_df = pd.read_csv("results/test_probabilities.csv")
+        y_test_df = pd.read_csv("results/y_test.csv")["target"]
+        test_probs_dict = {col: test_probs_df[col].values for col in test_probs_df.columns}
+        
+        plot_roc_curves(y_test_df, test_probs_dict)
+        plot_probability_distributions(test_probs_dict)
+        plot_calibration_curves(y_test_df, test_probs_dict)
+        
+        model_portfolios = {}
+        all_results_df = pd.read_csv("results/model_results.csv")
+        
+        for model_name in test_probs_df.columns:
+            temp_df = test_data.copy()
+            temp_df["Predicted_Probability"] = test_probs_df[model_name].values
+            p_scores = temp_df.groupby("pair")["Predicted_Probability"].mean().reset_index()
+            p_scores.rename(columns={"pair": "Pair"}, inplace=True)
+            p_scores = p_scores.sort_values("Predicted_Probability", ascending=False)
+            
+            try:
+                m_returns = build_portfolio_returns(p_scores, test_prices, top_n=5)
+                m_equity = (100 + m_returns.cumsum())
+                m_sharpe = calculate_sharpe_ratio(m_returns)
+                _, m_max_drawdown = calculate_drawdown(m_equity)
+            except:
+                m_sharpe = -999
+                m_max_drawdown = -999
+                
+            model_roc_auc = all_results_df[(all_results_df["Model"] == model_name) & (all_results_df["Type"] == "Out-of-Sample Test")]["ROC AUC"].values[0]
+            
+            model_portfolios[model_name] = {
+                "Sharpe": m_sharpe,
+                "Max Drawdown": m_max_drawdown,
+                "ROC AUC": model_roc_auc,
+                "Predicted Pairs": p_scores
+            }
+            
+        best_model_name = sorted(model_portfolios.keys(), key=lambda k: (model_portfolios[k]["Sharpe"], model_portfolios[k]["Max Drawdown"], model_portfolios[k]["ROC AUC"]), reverse=True)[0]
+        print(f"\n[Advanced Eval] Best Portfolio Model: {best_model_name} (OOS Sharpe: {model_portfolios[best_model_name]['Sharpe']:.4f})")
+        
+        # Override predicted_pairs for downstream pipeline compatibility
+        predicted_pairs = model_portfolios[best_model_name]["Predicted Pairs"]
+        
+        feature_stability_df = pd.read_csv("results/feature_stability.csv") if os.path.exists("results/feature_stability.csv") else pd.DataFrame()
+        generate_research_report(all_results_df, feature_stability_df, best_model_name, model_portfolios)
+    # ------------------------------------------------------------
+    
     predicted_pairs.to_csv("results/predicted_pairs.csv", index=False)
 
     #Research Porfolio
@@ -136,9 +197,9 @@ def main():
     print(rolling_results)
     rolling_results.to_csv("results/rolling_walkforward.csv",index=False)   
     print("\nRolling Walk-Forward Summary")
-    print("Average Test Sharpe:", rolling_results["Sharpe"].mean())
-    print("Best Test Sharpe:",rolling_results["Sharpe"].max())
-    print("Worst Test Sharpe:",rolling_results["Sharpe"].min())
+    print("Average Test Sharpe:", rolling_results["Sharpe (After Costs)"].mean())
+    print("Best Test Sharpe:",rolling_results["Sharpe (After Costs)"].max())
+    print("Worst Test Sharpe:",rolling_results["Sharpe (After Costs)"].min())
     
     #Parameter Optimization
     optimization_results = optimize_parameters("HD","WFC",train_prices)

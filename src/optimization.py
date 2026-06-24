@@ -27,8 +27,8 @@ def optimize_parameters(
             results.append({
                 "Entry": entry,
                 "Exit": exit,
-                "Sharpe": result["Sharpe"],
-                "PnL": result["Total PnL"],
+                "Sharpe": result["Sharpe (After Costs)"],
+                "PnL": result["Total Net PnL"],
                 "Trades": result["Trades"]
             })
     results_df = pd.DataFrame(results)

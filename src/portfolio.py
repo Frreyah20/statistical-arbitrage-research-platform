@@ -4,6 +4,8 @@ from cointegration import calculate_spread
 from signals import calculate_rolling_zscore
 from signal_generator import generate_positions
 from performance import calculate_daily_spread_returns,calculate_strategy_returns
+import config
+from transaction_costs import TransactionCostModel
 import pandas as pd
 import numpy as np
 
@@ -39,12 +41,22 @@ def get_pair_returns(stock1, stock2, prices):
         positions.index
     ]
 
-    strategy_returns = calculate_strategy_returns(
-        spread_returns,
-        positions
+    cost_model = TransactionCostModel(
+        commission_bps=config.COMMISSION_BPS,
+        spread_bps=config.SPREAD_BPS,
+        slippage_bps=config.SLIPPAGE_BPS
     )
 
-    return strategy_returns
+    _, net_returns, _ = calculate_strategy_returns(
+        spread_returns,
+        positions,
+        price1=prices[stock1].loc[positions.index],
+        price2=prices[stock2].loc[positions.index],
+        hedge_ratio=beta,
+        cost_model=cost_model
+    )
+
+    return net_returns
 
 def build_portfolio_returns(
     ranked_pairs,

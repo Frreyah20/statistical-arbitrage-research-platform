@@ -143,9 +143,6 @@ def main():
         
         # Override predicted_pairs for downstream pipeline compatibility
         predicted_pairs = model_portfolios[best_model_name]["Predicted Pairs"]
-        
-        feature_stability_df = pd.read_csv("results/feature_stability.csv") if os.path.exists("results/feature_stability.csv") else pd.DataFrame()
-        generate_research_report(all_results_df, feature_stability_df, best_model_name, model_portfolios)
     # ------------------------------------------------------------
     
     predicted_pairs.to_csv("results/predicted_pairs.csv", index=False)
@@ -216,6 +213,12 @@ def main():
         
     #Plots
     plot_feature_importance(importance_df)
+    
+    # Generate Research Report
+    if os.path.exists("results/test_probabilities.csv"):
+        feature_stability_df = pd.read_csv("results/feature_stability.csv") if os.path.exists("results/feature_stability.csv") else pd.DataFrame()
+        generate_research_report(all_results_df, feature_stability_df, best_model_name, model_portfolios)
+
     print("\nResults saved to results/")
     print("Plots saved to results/plots/")
     
